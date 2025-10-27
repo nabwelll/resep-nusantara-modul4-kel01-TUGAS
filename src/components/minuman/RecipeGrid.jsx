@@ -2,7 +2,7 @@
 import { Clock, Star, ChefHat } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-export default function RecipeGrid({ recipes }) {
+export default function RecipeGrid({ recipes, onRecipeClick }) {
   const [visibleCards, setVisibleCards] = useState(new Set());
   const cardRefs = useRef([]);
 
@@ -50,6 +50,7 @@ export default function RecipeGrid({ recipes }) {
                 ? 'translate-y-0 opacity-100' 
                 : 'translate-y-8 opacity-0'
             }`}
+            onClick={() => onRecipeClick(recipe)}
           >
             {/* Card structure is consistent, only the tag is changed */}
             <div className="relative bg-white/15 backdrop-blur-xl border border-white/25 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg md:shadow-2xl shadow-green-500/5 hover:shadow-green-500/15 transition-all duration-500 cursor-pointer group-hover:scale-105 group-hover:bg-white/20">
