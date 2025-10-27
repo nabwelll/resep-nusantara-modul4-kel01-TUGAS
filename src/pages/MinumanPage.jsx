@@ -30,6 +30,14 @@ export default function MinumanPage() {
         />
         <RecipeGrid recipes={filteredRecipes} />
       </main>
+
+      {selectedRecipe && (
+        <RecipeDetail 
+          recipe={selectedRecipe} 
+          onClose={handleCloseDetail}
+          type="minuman"
+        />
+      )}
     </div>
   );
 }

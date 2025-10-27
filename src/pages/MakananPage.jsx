@@ -29,6 +29,14 @@ export default function MakananPage() {
         />
         <RecipeGrid recipes={filteredRecipes} />
       </main>
+      
+      {selectedRecipe && (
+        <RecipeDetail 
+          recipe={selectedRecipe} 
+          onClose={handleCloseDetail}
+          type="makanan"
+        />
+      )}
     </div>
   );
 }
