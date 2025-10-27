@@ -24,7 +24,24 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
 
   if (!recipe) return null;
 
-  const accentColor = type === 'makanan' ? 'blue' : 'green';
+  const colors = {
+    makanan: {
+      tag: 'text-blue-700 bg-blue-100',
+      accent: 'bg-blue-500',
+      numberBg: 'bg-blue-100 text-blue-600',
+      circleBg: 'bg-blue-500'
+    },
+    minuman: {
+      tag: 'text-green-700 bg-green-100',
+      accent: 'bg-green-500',
+      numberBg: 'bg-green-100 text-green-600',
+      circleBg: 'bg-green-500'
+    }
+  };
+
+  const colorScheme = colors[type];
+  const rating = type === 'makanan' ? '4.8' : '4.7';
+  const label = type === 'makanan' ? 'Makanan' : 'Minuman';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
@@ -52,13 +69,13 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
             {/* Title Overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
               <div className="flex items-center space-x-3 mb-3">
-                <span className={`text-sm font-semibold text-${accentColor}-700 bg-${accentColor}-100 px-3 py-1.5 rounded-full`}>
-                  {type === 'makanan' ? 'Makanan' : 'Minuman'}
+                <span className={`text-sm font-semibold px-3 py-1.5 rounded-full ${colorScheme.tag}`}>
+                  {label}
                 </span>
                 <div className="flex items-center space-x-1 bg-white/90 px-3 py-1.5 rounded-full">
                   <Star className="w-4 h-4 text-yellow-500 fill-current" />
                   <span className="text-sm font-semibold text-slate-700">
-                    {type === 'makanan' ? '4.8' : '4.7'}
+                    {rating}
                   </span>
                 </div>
               </div>
@@ -83,7 +100,7 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
             {/* Ingredients Section */}
             <div>
               <h3 className="text-2xl font-bold text-slate-800 mb-4 flex items-center">
-                <div className={`w-1 h-8 bg-${accentColor}-500 rounded-full mr-3`}></div>
+                <div className={`w-1 h-8 rounded-full mr-3 ${colorScheme.accent}`}></div>
                 Bahan-Bahan
               </h3>
               <ul className="space-y-2">
@@ -92,7 +109,7 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
                     key={index}
                     className="flex items-start space-x-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
                   >
-                    <span className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-${accentColor}-100 text-${accentColor}-600 text-sm font-semibold`}>
+                    <span className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-sm font-semibold ${colorScheme.numberBg}`}>
                       {index + 1}
                     </span>
                     <span className="text-slate-700">{ingredient}</span>
@@ -104,7 +121,7 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
             {/* Steps Section */}
             <div>
               <h3 className="text-2xl font-bold text-slate-800 mb-4 flex items-center">
-                <div className={`w-1 h-8 bg-${accentColor}-500 rounded-full mr-3`}></div>
+                <div className={`w-1 h-8 rounded-full mr-3 ${colorScheme.accent}`}></div>
                 Langkah-Langkah
               </h3>
               <ol className="space-y-4">
@@ -113,7 +130,7 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
                     key={index}
                     className="flex items-start space-x-4 p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
                   >
-                    <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-${accentColor}-500 text-white text-sm font-bold`}>
+                    <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-white text-sm font-bold ${colorScheme.circleBg}`}>
                       {index + 1}
                     </span>
                     <span className="text-slate-700 pt-1">{step}</span>

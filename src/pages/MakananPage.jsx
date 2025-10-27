@@ -13,7 +13,7 @@ export default function MakananPage() {
 
   useEffect(() => {
     setFilteredRecipes(allMakanan);
-  });
+  }, []);
 
   const handleRecipeClick = (recipe) => {
     setSelectedRecipe(recipe);

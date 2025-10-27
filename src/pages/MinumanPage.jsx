@@ -13,7 +13,7 @@ export default function MinumanPage() {
 
   useEffect(() => {
     setFilteredRecipes(allMinuman);
-  });
+  }, []);
 
   const handleRecipeClick = (recipe) => {
     setSelectedRecipe(recipe);
