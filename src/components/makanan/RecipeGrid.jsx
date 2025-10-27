@@ -1,10 +1,34 @@
 // src/components/makanan/RecipeGrid.jsx
-import { Clock, Star, ChefHat } from 'lucide-react';
+import { Clock, Star, ChefHat, Heart } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { addFavorite, removeFavorite, isFavorite } from '../../utils/favorites';
 
-export default function RecipeGrid({ recipes }) {
+export default function RecipeGrid({ recipes, onRecipeClick }) {
   const [visibleCards, setVisibleCards] = useState(new Set());
+  const [favorites, setFavorites] = useState({});
   const cardRefs = useRef([]);
+
+  // Initialize favorites state
+  useEffect(() => {
+    const favState = {};
+    recipes.forEach(recipe => {
+      favState[recipe.id] = isFavorite(recipe.id, 'makanan');
+    });
+    setFavorites(favState);
+  }, [recipes]);
+
+  const handleFavoriteToggle = (recipe, event) => {
+    event.stopPropagation();
+    const recipeWithType = { ...recipe, type: 'makanan' };
+    
+    if (favorites[recipe.id]) {
+      removeFavorite(recipe.id, 'makanan');
+      setFavorites(prev => ({ ...prev, [recipe.id]: false }));
+    } else {
+      addFavorite(recipeWithType);
+      setFavorites(prev => ({ ...prev, [recipe.id]: true }));
+    }
+  };
 
   useEffect(() => {
    
@@ -52,6 +76,7 @@ export default function RecipeGrid({ recipes }) {
                 ? 'translate-y-0 opacity-100' 
                 : 'translate-y-8 opacity-0'
             }`}
+            onClick={() => onRecipeClick(recipe)}
           >
             
             <div className="relative bg-white/15 backdrop-blur-xl border border-white/25 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg md:shadow-2xl shadow-blue-500/5 hover:shadow-blue-500/15 transition-all duration-500 cursor-pointer group-hover:scale-105 group-hover:bg-white/20">
@@ -63,6 +88,20 @@ export default function RecipeGrid({ recipes }) {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                {/* Favorite button */}
+                <button
+                  onClick={(e) => handleFavoriteToggle(recipe, e)}
+                  className="absolute top-2 right-2 md:top-4 md:right-4 p-1.5 md:p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10"
+                  aria-label={favorites[recipe.id] ? "Remove from favorites" : "Add to favorites"}
+                >
+                  <Heart 
+                    className={`w-4 h-4 md:w-5 md:h-5 transition-colors ${
+                      favorites[recipe.id] 
+                        ? 'text-red-500 fill-red-500' 
+                        : 'text-gray-600'
+                    }`}
+                  />
+                </button>
               </div>
               <div className="relative z-10 p-4 md:p-8">
                 <div className="flex items-center justify-between mb-3 md:mb-4">
