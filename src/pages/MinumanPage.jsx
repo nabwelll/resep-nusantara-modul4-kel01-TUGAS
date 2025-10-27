@@ -1,32 +1,25 @@
 // src/pages/MinumanPage.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ResepMinuman } from '../data/minuman';
 import RecipeGrid from '../components/minuman/RecipeGrid';
 
 export default function MinumanPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredRecipes, setFilteredRecipes] = useState([]);
-
+  const [searchQuery] = useState('');
   
-  const allMinuman = Object.values(ResepMinuman.resep);
+  const allMinuman = useMemo(() => Object.values(ResepMinuman.resep), []);
+  const [filteredRecipes, setFilteredRecipes] = useState(allMinuman);
 
   useEffect(() => {
-   
-    const filter = () => {
-      if (searchQuery.trim() === '') {
-        setFilteredRecipes(allMinuman);
-      } else {
-        const lowercasedQuery = searchQuery.toLowerCase();
-        const filtered = allMinuman.filter(recipe => 
-          recipe.name.toLowerCase().includes(lowercasedQuery)
-        );
-        setFilteredRecipes(filtered);
-      }
-    };
-
-
-    filter();
-  });
+    if (searchQuery.trim() === '') {
+      setFilteredRecipes(allMinuman);
+    } else {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      const filtered = allMinuman.filter(recipe => 
+        recipe.name.toLowerCase().includes(lowercasedQuery)
+      );
+      setFilteredRecipes(filtered);
+    }
+  }, [searchQuery, allMinuman]);
 
   return (
   
