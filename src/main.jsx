@@ -5,6 +5,7 @@ import SplashScreen from './pages/SplashScreen';
 import HomePage from './pages/HomePage';
 import MakananPage from './pages/MakananPage';
 import MinumanPage from './pages/MinumanPage';
+import FavoritesPage from './pages/FavoritesPage';
 import ProfilePage from './pages/ProfilePage';
 import DesktopNavbar from './components/navbar/DesktopNavbar';
 import MobileNavbar from './components/navbar/MobileNavbar';
@@ -31,6 +32,8 @@ function AppRoot() {
         return <MakananPage />;
       case 'minuman':
         return <MinumanPage />;
+      case 'favorites':
+        return <FavoritesPage />;
       case 'profile':
         return <ProfilePage />;
       default:
