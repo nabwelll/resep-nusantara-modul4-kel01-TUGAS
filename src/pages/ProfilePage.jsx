@@ -8,23 +8,19 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   // Sample user data - in a real app, this would come from state/API
   const userData = {
-    name: "Budi Santoso",
-    photo: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop&crop=faces",
-    email: "budi.santoso@email.com",
-    phone: "+62 812-3456-7890",
-    location: "Jakarta, Indonesia",
-    joinDate: "Januari 2024",
-    bio: "Pecinta kuliner Nusantara dan penggemar masakan tradisional. Senang berbagi resep dan tips memasak dengan komunitas.",
+    name: profile.username,
+    photo: profile.avatar,
+    email: profile.email,
+    phone: profile.phone,
+    location: profile.location,
+    joinDate: profile.joinDate,
+    bio: profile.bio,
     stats: {
       recipes: 12,
-      favorites: 48,
+      favorites: favorites.length,
       followers: 234
     },
-    social: {
-      instagram: "@budisantoso",
-      github: "budisantoso",
-      linkedin: "budi-santoso"
-    }
+    social: profile.social
   };
 
   // Load cache information on component mount
@@ -77,14 +73,74 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-6 h-6 md:w-8 md:h-8 bg-green-500 rounded-full border-2 md:border-4 border-white" />
+                
+                {/* Avatar Edit Button */}
+                <button
+                  onClick={handleAvatarClick}
+                  className="absolute bottom-0 right-0 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                  aria-label="Change avatar"
+                  title="Ubah foto profil"
+                >
+                  <Camera className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+                
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
               </div>
             </div>
 
             {/* Name and Bio */}
             <div className="mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">
-                {userData.name}
-              </h2>
+              <div className="flex items-center gap-2 mb-2">
+                {isEditingUsername ? (
+                  <>
+                    <input
+                      type="text"
+                      value={tempUsername}
+                      onChange={(e) => setTempUsername(e.target.value)}
+                      className="text-2xl md:text-3xl font-bold text-slate-800 bg-white border-2 border-blue-400 rounded-lg px-3 py-1 focus:outline-none focus:border-blue-600"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleUsernameSave();
+                        if (e.key === 'Escape') handleUsernameCancel();
+                      }}
+                    />
+                    <button
+                      onClick={handleUsernameSave}
+                      className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                      title="Simpan"
+                    >
+                      <Check className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={handleUsernameCancel}
+                      className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                      title="Batal"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
+                      {userData.name}
+                    </h2>
+                    <button
+                      onClick={handleUsernameEdit}
+                      className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 hover:scale-110"
+                      title="Edit username"
+                    >
+                      <Edit2 className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                  </>
+                )}
+              </div>
               <p className="text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl">
                 {userData.bio}
               </p>
