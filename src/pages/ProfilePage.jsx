@@ -1,26 +1,93 @@
 // src/pages/ProfilePage.jsx
-import { Mail, Phone, MapPin, Calendar, Instagram, Github, Linkedin, User } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Mail, Phone, MapPin, Calendar, Instagram, Github, Linkedin, User, Camera, Edit2, Check, X, Clock, Star, ChefHat, Heart } from 'lucide-react';
+import { getProfile, updateUsername, updateAvatar, imageToBase64 } from '../utils/profile';
+import { getFavorites, removeFavorite } from '../utils/favorites';
 
 export default function ProfilePage() {
-  // Sample user data - in a real app, this would come from state/API
+  const [profile, setProfile] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [tempUsername, setTempUsername] = useState('');
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    // Load profile data
+    const profileData = getProfile();
+    setProfile(profileData);
+    setTempUsername(profileData.username);
+    
+    // Load favorites
+    const favs = getFavorites();
+    setFavorites(favs);
+  }, []);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const base64 = await imageToBase64(file);
+        const updatedProfile = updateAvatar(base64);
+        setProfile(updatedProfile);
+      } catch (error) {
+        console.error('Error uploading avatar:', error);
+        alert('Gagal mengunggah foto. Silakan coba lagi.');
+      }
+    }
+  };
+
+  const handleUsernameEdit = () => {
+    setIsEditingUsername(true);
+  };
+
+  const handleUsernameSave = () => {
+    if (tempUsername.trim()) {
+      const updatedProfile = updateUsername(tempUsername.trim());
+      setProfile(updatedProfile);
+      setIsEditingUsername(false);
+    }
+  };
+
+  const handleUsernameCancel = () => {
+    setTempUsername(profile.username);
+    setIsEditingUsername(false);
+  };
+
+  const handleRemoveFavorite = (recipe, event) => {
+    event.stopPropagation();
+    removeFavorite(recipe.id, recipe.type);
+    setFavorites(getFavorites());
+  };
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Memuat profil...</p>
+        </div>
+      </div>
+    );
+  }
+
   const userData = {
-    name: "Budi Santoso",
-    photo: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop&crop=faces",
-    email: "budi.santoso@email.com",
-    phone: "+62 812-3456-7890",
-    location: "Jakarta, Indonesia",
-    joinDate: "Januari 2024",
-    bio: "Pecinta kuliner Nusantara dan penggemar masakan tradisional. Senang berbagi resep dan tips memasak dengan komunitas.",
+    name: profile.username,
+    photo: profile.avatar,
+    email: profile.email,
+    phone: profile.phone,
+    location: profile.location,
+    joinDate: profile.joinDate,
+    bio: profile.bio,
     stats: {
       recipes: 12,
-      favorites: 48,
+      favorites: favorites.length,
       followers: 234
     },
-    social: {
-      instagram: "@budisantoso",
-      github: "budisantoso",
-      linkedin: "budi-santoso"
-    }
+    social: profile.social
   };
 
   return (
@@ -51,14 +118,74 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-6 h-6 md:w-8 md:h-8 bg-green-500 rounded-full border-2 md:border-4 border-white" />
+                
+                {/* Avatar Edit Button */}
+                <button
+                  onClick={handleAvatarClick}
+                  className="absolute bottom-0 right-0 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                  aria-label="Change avatar"
+                  title="Ubah foto profil"
+                >
+                  <Camera className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+                
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
               </div>
             </div>
 
             {/* Name and Bio */}
             <div className="mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">
-                {userData.name}
-              </h2>
+              <div className="flex items-center gap-2 mb-2">
+                {isEditingUsername ? (
+                  <>
+                    <input
+                      type="text"
+                      value={tempUsername}
+                      onChange={(e) => setTempUsername(e.target.value)}
+                      className="text-2xl md:text-3xl font-bold text-slate-800 bg-white border-2 border-blue-400 rounded-lg px-3 py-1 focus:outline-none focus:border-blue-600"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleUsernameSave();
+                        if (e.key === 'Escape') handleUsernameCancel();
+                      }}
+                    />
+                    <button
+                      onClick={handleUsernameSave}
+                      className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                      title="Simpan"
+                    >
+                      <Check className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={handleUsernameCancel}
+                      className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                      title="Batal"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
+                      {userData.name}
+                    </h2>
+                    <button
+                      onClick={handleUsernameEdit}
+                      className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 hover:scale-110"
+                      title="Edit username"
+                    >
+                      <Edit2 className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                  </>
+                )}
+              </div>
               <p className="text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl">
                 {userData.bio}
               </p>
@@ -176,6 +303,93 @@ export default function ProfilePage() {
               <span className="font-medium text-sm md:text-base">{userData.social.linkedin}</span>
             </a>
           </div>
+        </div>
+
+        {/* Favorites Section */}
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-purple-500/10 p-4 md:p-8 mt-6">
+          <h3 className="text-lg md:text-xl font-semibold text-slate-800 mb-4 md:mb-6 flex items-center space-x-2">
+            <Heart className="w-5 h-5 md:w-6 md:h-6 text-pink-600" />
+            <span>Resep Favorit Saya</span>
+            <span className="ml-auto text-sm font-normal text-slate-500">
+              {favorites.length} resep
+            </span>
+          </h3>
+
+          {favorites.length === 0 ? (
+            <div className="text-center py-12 bg-white/30 rounded-2xl border border-white/50">
+              <Heart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500 text-base mb-1">Belum ada resep favorit</p>
+              <p className="text-slate-400 text-sm">Mulai tandai resep favorit Anda dari halaman Makanan atau Minuman</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {favorites.map((recipe) => (
+                <div 
+                  key={`${recipe.id}-${recipe.type}`}
+                  className="group transform transition-all duration-300 hover:scale-105"
+                >
+                  <div className={`relative bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl overflow-hidden shadow-lg ${
+                    recipe.type === 'makanan' 
+                      ? 'shadow-blue-500/10 hover:shadow-blue-500/20' 
+                      : 'shadow-green-500/10 hover:shadow-green-500/20'
+                  } transition-all duration-300`}>
+                    <div className="relative h-40 overflow-hidden">
+                      <img 
+                        src={recipe.image_url}
+                        alt={recipe.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                      
+                      {/* Favorite button */}
+                      <button
+                        onClick={(e) => handleRemoveFavorite(recipe, e)}
+                        className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10"
+                        aria-label="Remove from favorites"
+                        title="Hapus dari favorit"
+                      >
+                        <Heart 
+                          className="w-4 h-4 text-red-500 fill-red-500"
+                        />
+                      </button>
+
+                      {/* Type badge */}
+                      <span className={`absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full ${
+                        recipe.type === 'makanan'
+                          ? 'text-blue-700 bg-blue-100/90'
+                          : 'text-green-700 bg-green-100/90'
+                      }`}>
+                        {recipe.type === 'makanan' ? 'Makanan' : 'Minuman'}
+                      </span>
+                    </div>
+                    
+                    <div className="p-4">
+                      <h4 className={`font-bold text-slate-800 mb-3 text-sm line-clamp-2 ${
+                        recipe.type === 'makanan' ? 'group-hover:text-blue-600' : 'group-hover:text-green-600'
+                      } transition-colors duration-200`}>
+                        {recipe.name}
+                      </h4>
+                      
+                      <div className="flex items-center justify-between text-xs text-slate-600">
+                        <div className="flex items-center space-x-1 bg-white/70 px-2 py-1 rounded-full">
+                          <Clock className="w-3 h-3" />
+                          <span className="font-medium">{recipe.ingredients?.length || 0}</span>
+                        </div>
+                        <div className="flex items-center space-x-1 bg-white/70 px-2 py-1 rounded-full">
+                          <ChefHat className="w-3 h-3" />
+                          <span className="font-medium">{recipe.steps?.length || 0}</span>
+                        </div>
+                        <div className="flex items-center space-x-1 bg-white/70 px-2 py-1 rounded-full">
+                          <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                          <span className="font-medium">{recipe.type === 'makanan' ? '4.8' : '4.7'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
