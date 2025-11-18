@@ -1,5 +1,6 @@
 // src/pages/MinumanPage.jsx
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ResepMinuman } from '../data/minuman';
 import RecipeGrid from '../components/minuman/RecipeGrid';
 import SearchBar from '../components/shared/SearchBar';
@@ -9,6 +10,8 @@ import Pagination from '../components/Pagination'; // ✅ Import Pagination
 const ITEMS_PER_PAGE = 6; // ✅ Jumlah resep per halaman
 
 export default function MinumanPage() {
+  const { recipeId } = useParams();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [currentPage, setCurrentPage] = useState(1); // ✅ State untuk halaman saat ini
@@ -48,12 +51,27 @@ export default function MinumanPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll ke atas
   };
 
+  // Open recipe from URL parameter
+  useEffect(() => {
+    if (recipeId) {
+      const recipe = allMinuman.find(r => r.id === parseInt(recipeId));
+      if (recipe) {
+        setSelectedRecipe(recipe);
+      } else {
+        // Recipe not found, redirect to minuman page
+        navigate('/minuman');
+      }
+    }
+  }, [recipeId, allMinuman, navigate]);
+
   const handleRecipeClick = (recipe) => {
     setSelectedRecipe(recipe);
+    navigate(`/minuman/${recipe.id}`);
   };
 
   const handleCloseDetail = () => {
     setSelectedRecipe(null);
+    navigate('/minuman');
   };
 
   return (

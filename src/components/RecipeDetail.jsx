@@ -1,8 +1,10 @@
 // src/components/RecipeDetail.jsx
-import { X, Clock, ChefHat, Star } from 'lucide-react';
-import { useEffect } from 'react';
+import { X, Clock, ChefHat, Star, Share2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
+  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
+
   // Prevent body scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -23,6 +25,38 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
   }, [onClose]);
 
   if (!recipe) return null;
+
+  // Handle share link
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/${type}/${recipe.id}`;
+    
+    try {
+      if (navigator.share) {
+        // Use native share API if available
+        await navigator.share({
+          title: recipe.name,
+          text: `Lihat resep ${recipe.name} di Resep Nusantara`,
+          url: shareUrl,
+        });
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        setShowCopiedMessage(true);
+        setTimeout(() => setShowCopiedMessage(false), 2000);
+      }
+    } catch (error) {
+      // Silently fail or fallback to clipboard
+      if (error.name !== 'AbortError') {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          setShowCopiedMessage(true);
+          setTimeout(() => setShowCopiedMessage(false), 2000);
+        } catch (clipboardError) {
+          console.error('Failed to copy link:', clipboardError);
+        }
+      }
+    }
+  };
 
   const colors = {
     makanan: {
@@ -46,14 +80,33 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-          aria-label="Close"
-        >
-          <X className="w-6 h-6 text-slate-700" />
-        </button>
+        {/* Action Buttons */}
+        <div className="absolute top-4 right-4 z-10 flex space-x-2">
+          {/* Share Button */}
+          <button
+            onClick={handleShare}
+            className="p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+            aria-label="Share"
+          >
+            <Share2 className="w-6 h-6 text-slate-700" />
+          </button>
+          
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+            aria-label="Close"
+          >
+            <X className="w-6 h-6 text-slate-700" />
+          </button>
+        </div>
+
+        {/* Copied Message Toast */}
+        {showCopiedMessage && (
+          <div className="absolute top-20 right-4 z-10 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg animate-slideUp">
+            Link berhasil disalin!
+          </div>
+        )}
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto max-h-[90vh]">

@@ -1,6 +1,7 @@
 // src/main.jsx
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import SplashScreen from './pages/SplashScreen';
 import HomePage from './pages/HomePage';
 import MakananPage from './pages/MakananPage';
@@ -12,33 +13,20 @@ import MobileNavbar from './components/navbar/MobileNavbar';
 import './index.css'
 import PWABadge from './PWABadge';
 
-function AppRoot() {
+function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
-  const [currentPage, setCurrentPage] = useState('home');
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const handleSplashComplete = () => {
     setShowSplash(false);
   };
 
-  const handleNavigation = (page) => {
-    setCurrentPage(page);
-  };
+  // Determine current page from URL
+  const currentPage = location.pathname.split('/')[1] || 'home';
 
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <HomePage />;
-      case 'makanan':
-        return <MakananPage />;
-      case 'minuman':
-        return <MinumanPage />;
-      case 'favorites':
-        return <FavoritesPage />;
-      case 'profile':
-        return <ProfilePage />;
-      default:
-        return <HomePage />;
-    }
+  const handleNavigation = (page) => {
+    navigate(`/${page === 'home' ? '' : page}`);
   };
 
   if (showSplash) {
@@ -52,7 +40,15 @@ function AppRoot() {
       
       {/* Main Content */}
       <main className="min-h-screen">
-        {renderCurrentPage()}
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/makanan" element={<MakananPage />} />
+          <Route path="/makanan/:recipeId" element={<MakananPage />} />
+          <Route path="/minuman" element={<MinumanPage />} />
+          <Route path="/minuman/:recipeId" element={<MinumanPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Routes>
       </main>
       
       {/* Mobile Navbar */}
@@ -60,6 +56,14 @@ function AppRoot() {
 
       <PWABadge />
     </div>
+  );
+}
+
+function AppRoot() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 
