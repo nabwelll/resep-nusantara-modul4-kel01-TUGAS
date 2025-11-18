@@ -1,8 +1,8 @@
 // src/components/RecipeDetail.jsx
-import { X, Clock, ChefHat, Star, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { X, Clock, ChefHat, Star } from 'lucide-react';
+import { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { getRecipeReviews, addReview, getAverageRating, getReviewCount } from '../utils/reviews';
+import LazyImage from './shared/LazyImage';
 
 export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
   const [reviews, setReviews] = useState([]);
@@ -135,7 +135,7 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
         <div className="overflow-y-auto max-h-[90vh]">
           {/* Hero Image */}
           <div className="relative h-64 md:h-80 overflow-hidden">
-            <img
+            <LazyImage
               src={recipe.image_url}
               alt={recipe.name}
               className="w-full h-full object-cover"
@@ -347,12 +347,12 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
 
 RecipeDetail.propTypes = {
   recipe: PropTypes.shape({
-    id: PropTypes.number.isRequired,
+    id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     image_url: PropTypes.string.isRequired,
     ingredients: PropTypes.arrayOf(PropTypes.string).isRequired,
     steps: PropTypes.arrayOf(PropTypes.string).isRequired,
-  }),
+  }).isRequired,
   onClose: PropTypes.func.isRequired,
   type: PropTypes.oneOf(['makanan', 'minuman']),
 };
