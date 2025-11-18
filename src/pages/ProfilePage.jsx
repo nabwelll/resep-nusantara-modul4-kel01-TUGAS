@@ -1,25 +1,47 @@
 // src/pages/ProfilePage.jsx
-import { Mail, Phone, MapPin, Calendar, Instagram, Github, Linkedin, User } from 'lucide-react';
+import { Mail, Phone, MapPin, Calendar, Instagram, Github, Linkedin, User, Database, HardDrive, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { getCacheInfo, clearCache, formatBytes } from '../utils/cacheInfo';
 
 export default function ProfilePage() {
+  const [cacheInfo, setCacheInfo] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   // Sample user data - in a real app, this would come from state/API
   const userData = {
-    name: "Budi Santoso",
-    photo: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop&crop=faces",
-    email: "budi.santoso@email.com",
-    phone: "+62 812-3456-7890",
-    location: "Jakarta, Indonesia",
-    joinDate: "Januari 2024",
-    bio: "Pecinta kuliner Nusantara dan penggemar masakan tradisional. Senang berbagi resep dan tips memasak dengan komunitas.",
+    name: profile.username,
+    photo: profile.avatar,
+    email: profile.email,
+    phone: profile.phone,
+    location: profile.location,
+    joinDate: profile.joinDate,
+    bio: profile.bio,
     stats: {
       recipes: 12,
-      favorites: 48,
+      favorites: favorites.length,
       followers: 234
     },
-    social: {
-      instagram: "@budisantoso",
-      github: "budisantoso",
-      linkedin: "budi-santoso"
+    social: profile.social
+  };
+
+  // Load cache information on component mount
+  useEffect(() => {
+    loadCacheInfo();
+  }, []);
+
+  const loadCacheInfo = async () => {
+    setIsLoading(true);
+    const info = await getCacheInfo();
+    setCacheInfo(info);
+    setIsLoading(false);
+  };
+
+  const handleClearCache = async (cacheName) => {
+    const success = await clearCache(cacheName);
+    if (success) {
+      await loadCacheInfo();
+      alert(`Cache "${cacheName}" berhasil dihapus!`);
+    } else {
+      alert('Gagal menghapus cache.');
     }
   };
 
@@ -51,14 +73,74 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-6 h-6 md:w-8 md:h-8 bg-green-500 rounded-full border-2 md:border-4 border-white" />
+                
+                {/* Avatar Edit Button */}
+                <button
+                  onClick={handleAvatarClick}
+                  className="absolute bottom-0 right-0 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                  aria-label="Change avatar"
+                  title="Ubah foto profil"
+                >
+                  <Camera className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+                
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
               </div>
             </div>
 
             {/* Name and Bio */}
             <div className="mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">
-                {userData.name}
-              </h2>
+              <div className="flex items-center gap-2 mb-2">
+                {isEditingUsername ? (
+                  <>
+                    <input
+                      type="text"
+                      value={tempUsername}
+                      onChange={(e) => setTempUsername(e.target.value)}
+                      className="text-2xl md:text-3xl font-bold text-slate-800 bg-white border-2 border-blue-400 rounded-lg px-3 py-1 focus:outline-none focus:border-blue-600"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleUsernameSave();
+                        if (e.key === 'Escape') handleUsernameCancel();
+                      }}
+                    />
+                    <button
+                      onClick={handleUsernameSave}
+                      className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                      title="Simpan"
+                    >
+                      <Check className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={handleUsernameCancel}
+                      className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                      title="Batal"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
+                      {userData.name}
+                    </h2>
+                    <button
+                      onClick={handleUsernameEdit}
+                      className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 hover:scale-110"
+                      title="Edit username"
+                    >
+                      <Edit2 className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                  </>
+                )}
+              </div>
               <p className="text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl">
                 {userData.bio}
               </p>
@@ -176,6 +258,74 @@ export default function ProfilePage() {
               <span className="font-medium text-sm md:text-base">{userData.social.linkedin}</span>
             </a>
           </div>
+        </div>
+
+        {/* Cache Information Section */}
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-purple-500/10 p-4 md:p-8 mt-6">
+          <h3 className="text-lg md:text-xl font-semibold text-slate-800 mb-4 md:mb-6 flex items-center space-x-2">
+            <Database className="w-5 h-5 md:w-6 md:h-6" />
+            <span>Informasi Cache</span>
+          </h3>
+          
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-slate-600">Memuat informasi cache...</p>
+            </div>
+          ) : cacheInfo.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-slate-600">Belum ada data cache tersimpan.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {cacheInfo.map((cache) => (
+                <div 
+                  key={cache.name}
+                  className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-xl p-4 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <HardDrive className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                        <h4 className="font-semibold text-slate-800 text-sm md:text-base">
+                          {cache.name}
+                        </h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs md:text-sm">
+                        <div>
+                          <p className="text-slate-500">Jumlah Item:</p>
+                          <p className="font-semibold text-slate-800">{cache.entries} item</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Ukuran Cache:</p>
+                          <p className="font-semibold text-slate-800">{cache.sizeFormatted}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleClearCache(cache.name)}
+                      className="ml-4 p-2 bg-red-100 hover:bg-red-200 rounded-lg transition-colors duration-200"
+                      title="Hapus cache"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              
+              {/* Total cache size */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/50 rounded-xl p-4 mt-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600 mb-1">Total Cache Tersimpan</p>
+                    <p className="text-xl md:text-2xl font-bold text-blue-600">
+                      {formatBytes(cacheInfo.reduce((acc, cache) => acc + cache.size, 0))}
+                    </p>
+                  </div>
+                  <Database className="w-10 h-10 md:w-12 md:h-12 text-blue-600 opacity-20" />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

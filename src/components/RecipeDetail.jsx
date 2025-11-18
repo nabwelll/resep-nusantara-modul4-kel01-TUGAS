@@ -1,9 +1,83 @@
 // src/components/RecipeDetail.jsx
-import { X, Clock, ChefHat, Star, Share2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { X, Clock, ChefHat, Star } from 'lucide-react';
+import { useEffect } from 'react';
+import PropTypes from 'prop-types';
+import LazyImage from './shared/LazyImage';
 
 export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
-  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [newReview, setNewReview] = useState({
+    userName: '',
+    rating: 5,
+    comment: ''
+  });
+
+  const loadReviews = () => {
+    const recipeReviews = getRecipeReviews(recipe.id, type);
+    const avgRating = getAverageRating(recipe.id, type);
+    const count = getReviewCount(recipe.id, type);
+    
+    setReviews(recipeReviews);
+    setAverageRating(avgRating);
+    setReviewCount(count);
+  };
+
+  // Load reviews when component mounts or recipe changes
+  useEffect(() => {
+    if (recipe) {
+      loadReviews();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipe, type]);
+
+  const handleSubmitReview = (e) => {
+    e.preventDefault();
+    
+    if (!newReview.userName.trim() || !newReview.comment.trim()) {
+      alert('Mohon isi nama dan komentar Anda');
+      return;
+    }
+
+    addReview(recipe.id, type, newReview);
+    loadReviews();
+    
+    // Reset form
+    setNewReview({
+      userName: '',
+      rating: 5,
+      comment: ''
+    });
+    setShowReviewForm(false);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const renderStars = (rating, size = 'w-4 h-4') => {
+    return (
+      <div className="flex items-center space-x-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`${size} ${
+              star <= rating
+                ? 'text-yellow-500 fill-current'
+                : 'text-slate-300'
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -74,7 +148,7 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
   };
 
   const colorScheme = colors[type];
-  const rating = type === 'makanan' ? '4.8' : '4.7';
+  const displayRating = averageRating > 0 ? averageRating : (type === 'makanan' ? '4.8' : '4.7');
   const label = type === 'makanan' ? 'Makanan' : 'Minuman';
 
   return (
@@ -112,7 +186,7 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
         <div className="overflow-y-auto max-h-[90vh]">
           {/* Hero Image */}
           <div className="relative h-64 md:h-80 overflow-hidden">
-            <img
+            <LazyImage
               src={recipe.image_url}
               alt={recipe.name}
               className="w-full h-full object-cover"
@@ -128,7 +202,7 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
                 <div className="flex items-center space-x-1 bg-white/90 px-3 py-1.5 rounded-full">
                   <Star className="w-4 h-4 text-yellow-500 fill-current" />
                   <span className="text-sm font-semibold text-slate-700">
-                    {rating}
+                    {displayRating} {reviewCount > 0 && `(${reviewCount})`}
                   </span>
                 </div>
               </div>
@@ -191,9 +265,145 @@ export default function RecipeDetail({ recipe, onClose, type = 'makanan' }) {
                 ))}
               </ol>
             </div>
+
+            {/* Reviews Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-bold text-slate-800 flex items-center">
+                  <div className={`w-1 h-8 rounded-full mr-3 ${colorScheme.accent}`}></div>
+                  Ulasan & Rating
+                </h3>
+                <button
+                  onClick={() => setShowReviewForm(!showReviewForm)}
+                  className={`px-4 py-2 rounded-lg font-semibold text-white transition-colors duration-200 ${colorScheme.accent} hover:opacity-90`}
+                >
+                  {showReviewForm ? 'Batal' : 'Tulis Ulasan'}
+                </button>
+              </div>
+
+              {/* Average Rating Display */}
+              {reviewCount > 0 && (
+                <div className="mb-6 p-4 bg-slate-50 rounded-xl">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-center">
+                      <div className="text-4xl font-bold text-slate-800">{averageRating}</div>
+                      <div className="text-sm text-slate-600 mt-1">dari 5</div>
+                    </div>
+                    <div className="flex-1">
+                      {renderStars(Math.round(averageRating), 'w-6 h-6')}
+                      <div className="text-sm text-slate-600 mt-2">
+                        Berdasarkan {reviewCount} ulasan
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Review Form */}
+              {showReviewForm && (
+                <form onSubmit={handleSubmitReview} className="mb-6 p-4 bg-slate-50 rounded-xl space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Nama Anda
+                    </label>
+                    <input
+                      type="text"
+                      value={newReview.userName}
+                      onChange={(e) => setNewReview({ ...newReview, userName: e.target.value })}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Masukkan nama Anda"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Rating
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setNewReview({ ...newReview, rating: star })}
+                          className="focus:outline-none transition-transform hover:scale-110"
+                        >
+                          <Star
+                            className={`w-8 h-8 ${
+                              star <= newReview.rating
+                                ? 'text-yellow-500 fill-current'
+                                : 'text-slate-300'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Ulasan Anda
+                    </label>
+                    <textarea
+                      value={newReview.comment}
+                      onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                      placeholder="Ceritakan pengalaman Anda dengan resep ini..."
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={`w-full py-2 rounded-lg font-semibold text-white transition-colors duration-200 ${colorScheme.accent} hover:opacity-90`}
+                  >
+                    Kirim Ulasan
+                  </button>
+                </form>
+              )}
+
+              {/* Reviews List */}
+              <div className="space-y-4">
+                {reviews.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500">
+                    Belum ada ulasan. Jadilah yang pertama memberikan ulasan!
+                  </div>
+                ) : (
+                  reviews.map((review) => (
+                    <div key={review.id} className="p-4 bg-slate-50 rounded-xl">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center">
+                            <User className="w-6 h-6 text-slate-600" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-slate-800">{review.userName}</div>
+                            <div className="text-xs text-slate-500">{formatDate(review.timestamp)}</div>
+                          </div>
+                        </div>
+                        {renderStars(review.rating)}
+                      </div>
+                      <p className="text-slate-700 mt-2">{review.comment}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+RecipeDetail.propTypes = {
+  recipe: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    image_url: PropTypes.string.isRequired,
+    ingredients: PropTypes.arrayOf(PropTypes.string).isRequired,
+    steps: PropTypes.arrayOf(PropTypes.string).isRequired,
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+  type: PropTypes.oneOf(['makanan', 'minuman']),
+};

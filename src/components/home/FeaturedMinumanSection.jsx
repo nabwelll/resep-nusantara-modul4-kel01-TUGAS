@@ -1,6 +1,8 @@
 // src/components/home/FeaturedMinumanSection.jsx
 import { Clock, Star, Coffee } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
+import LazyImage from '../shared/LazyImage';
 
 export default function FeaturedMinumanSection({ featuredMinuman }) {
   const [visibleMinuman, setVisibleMinuman] = useState(new Set());
@@ -57,7 +59,7 @@ export default function FeaturedMinumanSection({ featuredMinuman }) {
               <div className="flex">
                 {/* Recipe Image */}
                 <div className="h-29 w-28 md:h-48 md:w-48 flex-shrink-0 overflow-hidden">
-                  <img 
+                  <LazyImage 
                     src={recipe.image_url}
                     alt={recipe.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -98,3 +100,15 @@ export default function FeaturedMinumanSection({ featuredMinuman }) {
     </section>
   );
 }
+
+FeaturedMinumanSection.propTypes = {
+  featuredMinuman: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      image_url: PropTypes.string.isRequired,
+      ingredients: PropTypes.arrayOf(PropTypes.string).isRequired,
+      steps: PropTypes.arrayOf(PropTypes.string).isRequired,
+    })
+  ).isRequired,
+};

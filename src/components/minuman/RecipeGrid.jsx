@@ -1,7 +1,9 @@
 // src/components/minuman/RecipeGrid.jsx
 import { Clock, Star, ChefHat, Heart } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { addFavorite, removeFavorite, isFavorite } from '../../utils/favorites';
+import LazyImage from '../shared/LazyImage';
 
 export default function RecipeGrid({ recipes, onRecipeClick }) {
   const [visibleCards, setVisibleCards] = useState(new Set());
@@ -80,7 +82,7 @@ export default function RecipeGrid({ recipes, onRecipeClick }) {
             <div className="relative bg-white/15 backdrop-blur-xl border border-white/25 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg md:shadow-2xl shadow-green-500/5 hover:shadow-green-500/15 transition-all duration-500 cursor-pointer group-hover:scale-105 group-hover:bg-white/20">
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative h-32 md:h-56 overflow-hidden">
-                <img 
+                <LazyImage 
                   src={recipe.image_url}
                   alt={recipe.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -138,3 +140,16 @@ export default function RecipeGrid({ recipes, onRecipeClick }) {
     </section>
   );
 }
+
+RecipeGrid.propTypes = {
+  recipes: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      image_url: PropTypes.string.isRequired,
+      ingredients: PropTypes.arrayOf(PropTypes.string).isRequired,
+      steps: PropTypes.arrayOf(PropTypes.string).isRequired,
+    })
+  ).isRequired,
+  onRecipeClick: PropTypes.func.isRequired,
+};
