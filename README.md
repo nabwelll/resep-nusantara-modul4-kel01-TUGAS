@@ -48,7 +48,7 @@ Users can view and manage caches from the **Profile Page**:
 - **Tailwind CSS** - Styling
 - **vite-plugin-pwa** - PWA generation and service worker management
 
-## Development
+### Development
 
 ```bash
 # Install dependencies
